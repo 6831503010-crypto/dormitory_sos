@@ -60,7 +60,7 @@ export function StudentDashboard({ user, alerts }: StudentDashboardProps) {
                     </span>
                   </div>
                   {alert.note && (
-                    <p className="text-sm text-zinc-600 bg-zinc-50 p-2 rounded-lg mt-2 italic">
+                    <p className="mt-2 rounded-lg bg-zinc-50 p-2 text-sm italic text-zinc-600 truncate">
                       "{alert.note}"
                     </p>
                   )}
