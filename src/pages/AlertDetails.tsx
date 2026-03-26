@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, User as UserIcon, CheckCircle2, MessageSquare } from 'lucide-react';
 import { Alert, Status, User } from '../types';
 import { Badge } from '../components/Badge';
-import { Button, cn } from '../components/Button';
+import { Button } from '../components/Button';
 
 interface AlertDetailsProps {
   user: User;
@@ -115,7 +115,6 @@ export function AlertDetails({ user, alerts, onUpdateAlert }: AlertDetailsProps)
           <Button 
             variant={alert.status === 'Received' ? 'primary' : 'outline'} 
             size="sm"
-            className="hover:scale-105 active:scale-95 transition-all"
             onClick={() => handleStatusChange('Received')}
           >
             Received
@@ -123,7 +122,6 @@ export function AlertDetails({ user, alerts, onUpdateAlert }: AlertDetailsProps)
           <Button 
             variant={alert.status === 'On the Way' ? 'primary' : 'outline'} 
             size="sm"
-            className="hover:scale-105 active:scale-95 transition-all"
             onClick={() => handleStatusChange('On the Way')}
           >
             On the Way
@@ -131,10 +129,7 @@ export function AlertDetails({ user, alerts, onUpdateAlert }: AlertDetailsProps)
           <Button 
             variant={alert.status === 'Resolved' ? 'primary' : 'outline'} 
             size="sm"
-            className={cn(
-              "hover:scale-105 active:scale-95 transition-all",
-              alert.status === 'Resolved' ? 'bg-emerald-600 hover:bg-emerald-700' : ''
-            )}
+            className={alert.status === 'Resolved' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
             onClick={() => handleStatusChange('Resolved')}
           >
             Resolved
@@ -142,7 +137,6 @@ export function AlertDetails({ user, alerts, onUpdateAlert }: AlertDetailsProps)
           <Button 
             variant={alert.status === 'Cancelled' ? 'danger' : 'outline'} 
             size="sm"
-            className="hover:scale-105 active:scale-95 transition-all"
             onClick={() => handleStatusChange('Cancelled')}
           >
             Cancelled
