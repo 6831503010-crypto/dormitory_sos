@@ -11,14 +11,28 @@ interface AlertDetailsProps {
   onUpdateAlert: (id: string, updates: Partial<Alert>) => void;
 }
 
+// Transition map for forward-only workflow
+const ALLOWED_TRANSITIONS: Record<Status, Status[]> = {
+  'Sent': ['Received'],
+  'Received': ['On the Way', 'Cancelled'],
+  'On the Way': ['Resolved', 'Cancelled'],
+  'Resolved': [],
+  'Cancelled': [],
+};
+
 export function AlertDetails({ user, alerts, onUpdateAlert }: AlertDetailsProps) {
   const { id } = useParams();
   const navigate = useNavigate();
   const alert = alerts.find(a => a.id === id);
   
+  // Determine valid next steps based on the SAVED status of the alert
+  const currentSavedStatus = alert?.status || 'Sent';
+  const nextOptions = ALLOWED_TRANSITIONS[currentSavedStatus];
+  const isTerminal = currentSavedStatus === 'Resolved' || currentSavedStatus === 'Cancelled';
+
   // Controlled form state
-  const [status, setStatus] = useState<Status>(alert?.status || 'Sent');
-  const [isLocked, setIsLocked] = useState(alert?.status === 'Resolved' || alert?.status === 'Cancelled');
+  const [status, setStatus] = useState<Status>(currentSavedStatus);
+  const [isLocked, setIsLocked] = useState(isTerminal);
   const [resNote, setResNote] = useState(alert?.resolutionNote || '');
   
   // Modal state
@@ -41,6 +55,7 @@ export function AlertDetails({ user, alerts, onUpdateAlert }: AlertDetailsProps)
       assignedStaffId: user.id
     });
 
+    // Lock the form if we just moved to a terminal state
     if (status === "Resolved" || status === "Cancelled") {
       setIsLocked(true);
     }
@@ -50,7 +65,7 @@ export function AlertDetails({ user, alerts, onUpdateAlert }: AlertDetailsProps)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Trigger modal for critical statuses
+    // Trigger modal for critical status transitions
     if (status === 'Resolved' || status === 'Cancelled') {
       setShowModal(true);
     } else {
@@ -136,32 +151,44 @@ export function AlertDetails({ user, alerts, onUpdateAlert }: AlertDetailsProps)
             />
           </div>
 
-          <div className="space-y-4">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Update Status</span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {(['Received', 'On the Way', 'Resolved', 'Cancelled'] as Status[]).map((s) => (
-                <label 
-                  key={s}
-                  className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                    status === s 
-                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700' 
-                      : 'border-zinc-100 bg-white text-zinc-600 hover:border-zinc-200'
-                  } ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <input 
-                    type="radio"
-                    name="status"
-                    value={s}
-                    checked={status === s}
-                    onChange={(e) => setStatus(e.target.value as Status)}
-                    disabled={isLocked}
-                    className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span className="text-sm font-medium">{s}</span>
-                </label>
-              ))}
+          {/* Only show status update section if there are valid next steps */}
+          {!isLocked && nextOptions.length > 0 && (
+            <div className="space-y-4">
+              <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                Move to Next Status
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {nextOptions.map((s) => (
+                  <label 
+                    key={s}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                      status === s 
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700' 
+                        : 'border-zinc-100 bg-white text-zinc-600 hover:border-zinc-200'
+                    }`}
+                  >
+                    <input 
+                      type="radio"
+                      name="status"
+                      value={s}
+                      checked={status === s}
+                      onChange={(e) => setStatus(e.target.value as Status)}
+                      className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span className="text-sm font-medium">{s}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {isLocked && (
+            <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl text-center">
+              <p className="text-sm text-zinc-500 font-medium">
+                This alert is closed. No further status changes allowed.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="p-6 bg-zinc-50 border-t border-zinc-200 flex justify-end gap-3">
@@ -170,7 +197,7 @@ export function AlertDetails({ user, alerts, onUpdateAlert }: AlertDetailsProps)
             variant="outline" 
             onClick={() => navigate('/staff')}
           >
-            Cancel
+            Back
           </Button>
           <Button 
             type="submit" 
