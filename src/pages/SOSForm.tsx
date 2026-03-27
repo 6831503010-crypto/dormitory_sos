@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, MapPin, Info } from 'lucide-react';
-import { Category, User, Location, Alert } from '../types';
+import { Category, User, Location, Alert, Priority } from '../types';
 import { Button } from '../components/Button';
 
 interface SOSFormProps {
@@ -11,10 +11,46 @@ interface SOSFormProps {
 
 const CATEGORIES: Category[] = ['Medical', 'Security', 'Fire', 'Facility', 'Other'];
 
+// AI Priority Logic (Simulated)
+const getAIPriority = (category: Category, note: string = ''): { priority: Priority; reason: string } => {
+  const lowerNote = note.toLowerCase();
+  
+  // Rule 1: Fire is always High
+  if (category === 'Fire') {
+    return { priority: 'High', reason: 'Critical category: Fire detected.' };
+  }
+
+  // Rule 2: Medical with urgent keywords
+  if (category === 'Medical') {
+    const urgentKeywords = ['bleeding', 'fainted', 'unconscious', 'breath', 'heart', 'pain', 'emergency'];
+    if (urgentKeywords.some(k => lowerNote.includes(k))) {
+      return { priority: 'High', reason: 'Medical category with urgent keywords detected in note.' };
+    }
+    return { priority: 'Medium', reason: 'Medical category detected without specific urgent keywords.' };
+  }
+
+  // Rule 3: Security is usually Medium
+  if (category === 'Security') {
+    return { priority: 'Medium', reason: 'Security category detected.' };
+  }
+
+  // Rule 4: Facility with urgent keywords (leaks, sparks)
+  if (category === 'Facility') {
+    const urgentKeywords = ['leak', 'spark', 'flood', 'smoke', 'broken glass'];
+    if (urgentKeywords.some(k => lowerNote.includes(k))) {
+      return { priority: 'Medium', reason: 'Facility issue with potential safety hazard keywords.' };
+    }
+    return { priority: 'Low', reason: 'Standard facility maintenance request.' };
+  }
+
+  // Default
+  return { priority: 'Low', reason: 'General request with no urgent indicators detected.' };
+};
+
 export function SOSForm({ user, onAddAlert }: SOSFormProps) {
   const navigate = useNavigate();
   const [category, setCategory] = useState<Category>('Medical');
-    const [otherReason, setOtherReason] = useState('');
+  const [otherReason, setOtherReason] = useState('');
   const [location, setLocation] = useState<Location>({
     building: user.dormInfo?.split(',')[0].replace('Bldg ', '') || '',
     floor: user.dormInfo?.split(',')[1].trim().replace('F', '') || '',
@@ -22,21 +58,15 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
   });
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [floorError, setFloorError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!/^[1-9]\d*$/.test(location.floor.trim())) {
-      setFloorError('Floor must be a valid positive number');
-      return;
-    }
-    setFloorError('');
-
     setIsSubmitting(true);
 
     // Simulate network delay
     setTimeout(() => {
+      const { priority, reason } = getAIPriority(category, note);
+
       const newAlert: Alert = {
         id: 'A' + Math.random().toString(36).substr(2, 9),
         studentId: user.id,
@@ -46,6 +76,8 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
         note,
         status: 'Sent',
         createdAt: new Date().toISOString(),
+        aiPriority: priority,
+        aiReason: reason
       };
 
       onAddAlert(newAlert);
@@ -75,8 +107,8 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
                 type="button"
                 onClick={() => setCategory(cat)}
                 className={`p-4 rounded-xl border-2 text-left transition-all ${
-                  category === cat
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm'
+                  category === cat 
+                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm' 
                     : 'border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300'
                 }`}
               >
@@ -84,7 +116,7 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
               </button>
             ))}
           </div>
-          {category === 'Other' && (
+           {category === 'Other' && (
             <div className="mt-4 space-y-2">
               <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Please specify the issue</label>
               <input
@@ -106,29 +138,25 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-zinc-400">Building</label>
-              <input
+              <input 
                 required
                 className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                 value={location.building}
                 onChange={e => setLocation({...location, building: e.target.value})}
               />
             </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-400">Floor</label>
-            <input
-              required
-              className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-              value={location.floor}
-              onChange={e => {
-                setLocation({ ...location, floor: e.target.value });
-                if (floorError) setFloorError('');
-              }}
-            />
-            {floorError && <p className="text-xs text-red-500 mt-1">{floorError}</p>}
-          </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-400">Floor</label>
+              <input 
+                required
+                className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                value={location.floor}
+                onChange={e => setLocation({...location, floor: e.target.value})}
+              />
+            </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-zinc-400">Room</label>
-              <input
+              <input 
                 required
                 className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                 value={location.room}
@@ -140,7 +168,7 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
 
         <section className="space-y-4">
           <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider">Additional Note (Optional)</h2>
-          <textarea
+          <textarea 
             rows={3}
             placeholder="Describe your situation briefly..."
             className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
@@ -149,9 +177,9 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
           />
         </section>
 
-        <Button
-          type="submit"
-          className="w-full h-14 text-lg gap-2"
+        <Button 
+          type="submit" 
+          className="w-full h-14 text-lg gap-2" 
           disabled={isSubmitting}
         >
           {isSubmitting ? (

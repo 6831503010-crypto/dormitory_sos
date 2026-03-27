@@ -10,6 +10,8 @@ export interface Location {
   room: string;
 }
 
+export type Priority = 'High' | 'Medium' | 'Low';
+
 export interface Alert {
   id: string;
   studentId: string;
@@ -21,6 +23,8 @@ export interface Alert {
   createdAt: string;
   resolutionNote?: string;
   assignedStaffId?: string;
+  aiPriority?: Priority;
+  aiReason?: string;
 }
 
 export interface User {

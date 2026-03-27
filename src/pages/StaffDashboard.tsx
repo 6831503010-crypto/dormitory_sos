@@ -76,6 +76,7 @@ export function StaffDashboard({ alerts }: StaffDashboardProps) {
                 <th className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-wider">Student & Category</th>
                 <th className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-wider">Location</th>
                 <th className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-wider">Time</th>
+                <th className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-wider">AI Priority</th>
                 <th className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-wider"></th>
               </tr>
@@ -109,6 +110,26 @@ export function StaffDashboard({ alerts }: StaffDashboardProps) {
                         {new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    {alert.aiPriority ? (
+                      <div className="space-y-1">
+                        <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                          alert.aiPriority === 'High' 
+                            ? 'bg-red-50 text-red-700 border-red-200' 
+                            : alert.aiPriority === 'Medium'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}>
+                          {alert.aiPriority}
+                        </div>
+                        <p className="text-[10px] text-zinc-400 leading-tight max-w-[120px] truncate" title={alert.aiReason}>
+                          {alert.aiReason}
+                        </p>
+                      </div>
+                    ) : (
+                      <span className="text-zinc-300 text-[10px]">N/A</span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <Badge variant={alert.status}>{alert.status}</Badge>

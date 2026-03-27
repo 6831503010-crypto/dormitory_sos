@@ -17,6 +17,8 @@ export const INITIAL_ALERTS: Alert[] = [
     note: 'Fainted in the room.',
     status: 'Received',
     createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
+    aiPriority: 'High',
+    aiReason: 'Medical category with urgent keyword "fainted" detected.'
   },
   {
     id: 'A2',
@@ -27,5 +29,7 @@ export const INITIAL_ALERTS: Alert[] = [
     note: 'Strange noise outside the door.',
     status: 'Sent',
     createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 mins ago
+    aiPriority: 'Medium',
+    aiReason: 'Security category detected.'
   },
 ];
