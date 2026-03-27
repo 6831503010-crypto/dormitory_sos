@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Clock, MapPin, ChevronRight, AlertTriangle } from 'lucide-react';
-import { Alert, User } from '../types';
+import { Search, Filter,Plus, Clock, MapPin, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Alert, User, Status } from '../types';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 
@@ -10,8 +11,17 @@ interface StudentDashboardProps {
 }
 
 export function StudentDashboard({ user, alerts }: StudentDashboardProps) {
-  const myAlerts = alerts
+  const [filter, setFilter] = useState<Status | 'All'>('All');
+  const [search, setSearch] = useState('');
+
+    const myAlerts = alerts
     .filter(a => a.studentId === user.id)
+    .filter(a => filter === 'All' || a.status === filter)
+    .filter(a => 
+      a.category.toLowerCase().includes(search.toLowerCase()) ||
+      a.location.room.includes(search) ||
+      (a.note && a.note.toLowerCase().includes(search.toLowerCase()))
+    )
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const activeAlerts = myAlerts.filter(a => a.status !== 'Resolved' && a.status !== 'Cancelled');
@@ -22,14 +32,49 @@ export function StudentDashboard({ user, alerts }: StudentDashboardProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">My Requests</h1>
-          <p className="text-zinc-500 text-sm">Track your SOS and help requests.</p>
+          <p className="text-zinc-500 text-sm">
+            {activeAlerts.length} active SOS requests.
+          </p>
         </div>
-        <Link to="/student/sos">
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" />
-            <span>New SOS</span>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input 
+              className="w-full bg-white border border-zinc-200 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              placeholder="Search your requests..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <Link to="/student/sos">
+            <Button className="gap-2">
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">New SOS</span>
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+        <Button 
+          variant={filter === 'All' ? 'primary' : 'outline'} 
+          size="sm" 
+          onClick={() => setFilter('All')}
+          className="rounded-full whitespace-nowrap"
+        >
+          All Requests
+        </Button>
+        {(['Sent', 'Received', 'On the Way', 'Resolved', 'Cancelled'] as Status[]).map(s => (
+          <Button 
+            key={s}
+            variant={filter === s ? 'primary' : 'outline'} 
+            size="sm" 
+            onClick={() => setFilter(s)}
+            className="rounded-full whitespace-nowrap"
+          >
+            {s}
           </Button>
-        </Link>
+        ))}
       </div>
 
       {activeAlerts.length > 0 && (
@@ -63,6 +108,14 @@ export function StudentDashboard({ user, alerts }: StudentDashboardProps) {
                     <p className="mt-2 rounded-lg bg-zinc-50 p-2 text-sm italic text-zinc-600 truncate">
                       "{alert.note}"
                     </p>
+                  )}
+                  {alert.resolutionNote && (
+                    <div className="mt-3 pt-3 border-t border-zinc-100">
+                      <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Staff Resolution Note</p>
+                      <p className="text-sm text-emerald-700 bg-emerald-50 p-2 rounded-lg italic">
+                        "{alert.resolutionNote}"
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>

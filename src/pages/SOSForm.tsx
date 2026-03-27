@@ -4,17 +4,12 @@ import { ArrowLeft, Send, MapPin, Info } from 'lucide-react';
 import { Category, User, Location, Alert } from '../types';
 import { Button } from '../components/Button';
 
-
 interface SOSFormProps {
   user: User;
   onAddAlert: (alert: Alert) => void;
 }
 
-
 const CATEGORIES: Category[] = ['Medical', 'Security', 'Fire', 'Facility', 'Other'];
-
-
-
 
 export function SOSForm({ user, onAddAlert }: SOSFormProps) {
   const navigate = useNavigate();
@@ -29,19 +24,16 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [floorError, setFloorError] = useState('');
 
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
 
     if (!/^[1-9]\d*$/.test(location.floor.trim())) {
       setFloorError('Floor must be a valid positive number');
       return;
     }
     setFloorError('');
-   
-    setIsSubmitting(true);
 
+    setIsSubmitting(true);
 
     // Simulate network delay
     setTimeout(() => {
@@ -56,12 +48,10 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
         createdAt: new Date().toISOString(),
       };
 
-
       onAddAlert(newAlert);
       navigate('/student');
     }, 1000);
   };
-
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
@@ -71,7 +61,6 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
         </Button>
         <h1 className="text-xl font-bold text-zinc-900">Request Help</h1>
       </div>
-
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <section className="space-y-4">
@@ -95,7 +84,7 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
               </button>
             ))}
           </div>
-           {category === 'Other' && (
+          {category === 'Other' && (
             <div className="mt-4 space-y-2">
               <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Please specify the issue</label>
               <input
@@ -108,7 +97,6 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
             </div>
           )}
         </section>
-
 
         <section className="space-y-4">
           <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
@@ -150,7 +138,6 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
           </div>
         </section>
 
-
         <section className="space-y-4">
           <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider">Additional Note (Optional)</h2>
           <textarea
@@ -161,7 +148,6 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
             onChange={e => setNote(e.target.value)}
           />
         </section>
-
 
         <Button
           type="submit"
@@ -181,8 +167,3 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
     </div>
   );
 }
-
-
-
-
-
