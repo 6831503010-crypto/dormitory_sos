@@ -130,7 +130,7 @@ export function StudentDashboard({ user, alerts }: StudentDashboardProps) {
         </section>
       )}
 
-      {activeAlerts.length === 0 && (
+      {activeAlerts.length === 0 && filter !== 'Resolved' && filter !== 'Cancelled' && (
         <div className="bg-white border border-dashed border-zinc-200 rounded-2xl p-12 flex flex-col items-center justify-center text-center">
           <div className="w-12 h-12 bg-zinc-50 text-zinc-300 rounded-full flex items-center justify-center mb-4">
             <AlertTriangle className="w-6 h-6" />
