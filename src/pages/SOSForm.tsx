@@ -58,9 +58,17 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
   });
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [floorError, setFloorError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!/^[1-9]\d*$/.test(location.floor.trim())) {
+      setFloorError('Floor must be a valid positive number');
+      return;
+    }
+    setFloorError('');
+
     setIsSubmitting(true);
 
     // Simulate network delay
@@ -151,8 +159,12 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
                 required
                 className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                 value={location.floor}
-                onChange={e => setLocation({...location, floor: e.target.value})}
+                onChange={e => {
+                  setLocation({ ...location, floor: e.target.value });
+                  if(floorError) setFloorError('');
+                }}
               />
+              {floorError && <p className="text-xs text-red-500 mt-1">{floorError}</p>}
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-zinc-400">Room</label>
