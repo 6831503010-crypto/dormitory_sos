@@ -1,5 +1,7 @@
 export type Role = 'student' | 'staff';
 
+export type Priority = 'High' | 'Medium' | 'Low';
+
 export type Category = 'Medical' | 'Security' | 'Fire' | 'Facility' | 'Other';
 
 export type Status = 'Sent' | 'Received' | 'On the Way' | 'Resolved' | 'Cancelled';
@@ -9,8 +11,6 @@ export interface Location {
   floor: string;
   room: string;
 }
-
-export type Priority = 'High' | 'Medium' | 'Low';
 
 export interface Alert {
   id: string;
