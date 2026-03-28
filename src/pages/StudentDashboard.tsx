@@ -13,6 +13,7 @@ interface StudentDashboardProps {
 export function StudentDashboard({ user, alerts }: StudentDashboardProps) {
   const [filter, setFilter] = useState<Status | 'All'>('All');
   const [search, setSearch] = useState('');
+  const [expandedPastAlertId, setExpandedPastAlertId] = useState<string | null>(null);
 
     const myAlerts = alerts
     .filter(a => a.studentId === user.id)
@@ -139,20 +140,70 @@ export function StudentDashboard({ user, alerts }: StudentDashboardProps) {
       {pastAlerts.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">History</h2>
-          <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-100">
+          <div className="space-y-4">
             {pastAlerts.map(alert => (
-              <div key={alert.id} className="p-4 flex items-center justify-between hover:bg-zinc-50 transition-colors">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-zinc-900">{alert.category}</span>
-                    <Badge variant={alert.status} className="scale-75 origin-left">{alert.status}</Badge>
+              expandedPastAlertId === alert.id ? (
+                // Expanded card view
+                <div 
+                  key={alert.id}
+                  onClick={() => setExpandedPastAlertId(null)}
+                  className="bg-white border-2 border-zinc-200 rounded-xl p-4 shadow-sm relative overflow-hidden cursor-pointer hover:bg-zinc-50 transition-colors"
+                >
+                  <div className="absolute top-0 left-0 w-1 h-full bg-zinc-400" />
+                  <div className="flex justify-between items-start mb-3">
+                    <Badge variant={alert.category}>{alert.category}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={alert.status}>{alert.status}</Badge>
+                      <ChevronRight className="w-4 h-4 text-zinc-400 transform rotate-180" />
+                    </div>
                   </div>
-                  <span className="text-xs text-zinc-400">
-                    {new Date(alert.createdAt).toLocaleDateString()} • {new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-zinc-600">
+                      <MapPin className="w-4 h-4" />
+                      <span className="text-sm font-medium">
+                        Bldg {alert.location.building}, Floor {alert.location.floor}, Room {alert.location.room}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-zinc-400">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-xs">
+                        {new Date(alert.createdAt).toLocaleDateString()} • {new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    {alert.note && (
+                      <p className="mt-2 rounded-lg bg-zinc-50 p-2 text-sm italic text-zinc-600">
+                        "{alert.note}"
+                      </p>
+                    )}
+                    {alert.resolutionNote && (
+                      <div className="mt-3 pt-3 border-t border-zinc-100">
+                        <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Staff Resolution Note</p>
+                        <p className="text-sm text-emerald-700 bg-emerald-50 p-2 rounded-lg italic">
+                          "{alert.resolutionNote}"
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-zinc-300" />
-              </div>
+              ) : (
+                // Collapsed list view
+                <div 
+                  key={alert.id}
+                  onClick={() => setExpandedPastAlertId(alert.id)}
+                  className="bg-white border border-zinc-200 rounded-xl p-4 flex items-center justify-between hover:bg-zinc-50 transition-colors cursor-pointer"
+                >
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-zinc-900">{alert.category}</span>
+                      <Badge variant={alert.status} className="scale-75 origin-left">{alert.status}</Badge>
+                    </div>
+                    <span className="text-xs text-zinc-400">
+                      {new Date(alert.createdAt).toLocaleDateString()} • {new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-zinc-300" />
+                </div>
+              )
             ))}
           </div>
         </section>
