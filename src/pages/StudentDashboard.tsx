@@ -105,6 +105,11 @@ export function StudentDashboard({ user, alerts }: StudentDashboardProps) {
                       {new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
+                  {alert.otherReason && (
+                    <p className="mt-2 rounded-lg bg-orange-50 p-2 text-sm italic text-orange-700">
+                      <span className="font-semibold">Other Reason: </span>"{alert.otherReason}"
+                    </p>
+                  )}
                   {alert.note && (
                     <p className="mt-2 rounded-lg bg-zinc-50 p-2 text-sm italic text-zinc-600 truncate">
                       "{alert.note}"
@@ -170,6 +175,11 @@ export function StudentDashboard({ user, alerts }: StudentDashboardProps) {
                         {new Date(alert.createdAt).toLocaleDateString()} • {new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
+                    {alert.otherReason && (
+                      <p className="mt-2 rounded-lg bg-orange-50 p-2 text-sm italic text-orange-700">
+                        <span className="font-semibold">Other Reason: </span>"{alert.otherReason}"
+                      </p>
+                    )}
                     {alert.note && (
                       <p className="mt-2 rounded-lg bg-zinc-50 p-2 text-sm italic text-zinc-600">
                         "{alert.note}"

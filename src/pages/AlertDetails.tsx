@@ -127,6 +127,15 @@ export function AlertDetails({ user, alerts, onUpdateAlert }: AlertDetailsProps)
             </div>
           </div>
 
+          {alert.otherReason && (
+            <div className="space-y-1">
+              <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Other Reason</span>
+              <p className="bg-orange-50 rounded-xl p-4 text-sm text-orange-700 italic font-semibold">
+                "{alert.otherReason}"
+              </p>
+            </div>
+          )}
+
           {alert.note && (
             <div className="space-y-1">
               <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Student Note</span>

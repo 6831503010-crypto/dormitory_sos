@@ -19,6 +19,7 @@ export interface Alert {
   category: Category;
   location: Location;
   note?: string;
+  otherReason?: string;
   status: Status;
   createdAt: string;
   resolutionNote?: string;

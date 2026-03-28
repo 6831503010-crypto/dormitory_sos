@@ -130,8 +130,8 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
 
     // Simulate network delay
     setTimeout(() => {
-      const finalNote = category === 'Other' ? `[Other: ${otherReason}] ${note}` : note;
-      const { priority, reason } = getAIPriority(category, finalNote);
+      const priorityCheckNote = category === 'Other' ? otherReason : note;
+      const { priority, reason } = getAIPriority(category, priorityCheckNote);
 
       const newAlert: Alert = {
         id: 'A' + Math.random().toString(36).substr(2, 9),
@@ -139,7 +139,8 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
         studentName: user.name,
         category,
         location,
-        note: finalNote,
+        note: note,
+        otherReason: category === 'Other' ? otherReason : undefined,
         status: 'Sent',
         createdAt: new Date().toISOString(),
         aiPriority: priority,
