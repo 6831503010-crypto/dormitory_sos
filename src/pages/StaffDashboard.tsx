@@ -12,17 +12,54 @@ interface StaffDashboardProps {
 export function StaffDashboard({ alerts }: StaffDashboardProps) {
   const [filter, setFilter] = useState<Status | 'All'>('All');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'Time' | 'Priority'>('Time');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
+  // 1. Filter
   const filteredAlerts = alerts
     .filter(a => filter === 'All' || a.status === filter)
     .filter(a => 
       a.studentName.toLowerCase().includes(search.toLowerCase()) || 
       a.category.toLowerCase().includes(search.toLowerCase()) ||
       a.location.room.includes(search)
-    )
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    );
+
+  // 2. Sort
+  const sortedAlerts = [...filteredAlerts].sort((a, b) => {
+    if (sortBy === 'Priority') {
+      const priorityMap = { 'High': 3, 'Medium': 2, 'Low': 1 };
+      const aVal = priorityMap[a.aiPriority as keyof typeof priorityMap] || 0;
+      const bVal = priorityMap[b.aiPriority as keyof typeof priorityMap] || 0;
+      if (bVal !== aVal) return bVal - aVal;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  // 3. Paginate
+  const totalPages = Math.ceil(sortedAlerts.length / itemsPerPage);
+  const paginatedAlerts = sortedAlerts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const activeCount = alerts.filter(a => a.status !== 'Resolved' && a.status !== 'Cancelled').length;
+
+  const handleFilterChange = (s: Status | 'All') => {
+    setFilter(s);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (val: 'Time' | 'Priority') => {
+    setSortBy(val);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="space-y-6">
@@ -40,32 +77,52 @@ export function StaffDashboard({ alerts }: StaffDashboardProps) {
               className="w-full bg-white border border-zinc-200 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
               placeholder="Search alerts..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => handleSearchChange(e.target.value)}
             />
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-        <Button 
-          variant={filter === 'All' ? 'primary' : 'outline'} 
-          size="sm" 
-          onClick={() => setFilter('All')}
-          className="rounded-full whitespace-nowrap"
-        >
-          All Alerts
-        </Button>
-        {(['Sent', 'Received', 'On the Way', 'Resolved', 'Cancelled'] as Status[]).map(s => (
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-100 pb-4">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
           <Button 
-            key={s}
-            variant={filter === s ? 'primary' : 'outline'} 
+            variant={filter === 'All' ? 'primary' : 'outline'} 
             size="sm" 
-            onClick={() => setFilter(s)}
+            onClick={() => handleFilterChange('All')}
             className="rounded-full whitespace-nowrap"
           >
-            {s}
+            All Alerts
           </Button>
-        ))}
+          {(['Sent', 'Received', 'On the Way', 'Resolved', 'Cancelled'] as Status[]).map(s => (
+            <Button 
+              key={s}
+              variant={filter === s ? 'primary' : 'outline'} 
+              size="sm" 
+              onClick={() => handleFilterChange(s)}
+              className="rounded-full whitespace-nowrap"
+            >
+              {s}
+            </Button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3 self-end md:self-auto">
+          <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Sort By(Descending):</span>
+          <div className="flex bg-zinc-100 p-1 rounded-lg">
+            <button 
+              onClick={() => handleSortChange('Time')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${sortBy === 'Time' ? 'bg-white text-indigo-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
+            >
+              Time
+            </button>
+            <button 
+              onClick={() => handleSortChange('Priority')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${sortBy === 'Priority' ? 'bg-white text-indigo-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
+            >
+              AI Priority
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
@@ -82,7 +139,7 @@ export function StaffDashboard({ alerts }: StaffDashboardProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {filteredAlerts.map(alert => (
+              {paginatedAlerts.map(alert => (
                 <tr key={alert.id} className="hover:bg-zinc-50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -144,9 +201,9 @@ export function StaffDashboard({ alerts }: StaffDashboardProps) {
                   </td>
                 </tr>
               ))}
-              {filteredAlerts.length === 0 && (
+              {paginatedAlerts.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-zinc-400 italic">
+                  <td colSpan={6} className="px-6 py-12 text-center text-zinc-400 italic">
                     No alerts found matching your criteria.
                   </td>
                 </tr>
@@ -154,6 +211,48 @@ export function StaffDashboard({ alerts }: StaffDashboardProps) {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-between">
+            <div className="text-xs text-zinc-500">
+              Showing <span className="font-medium text-zinc-900">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium text-zinc-900">{Math.min(currentPage * itemsPerPage, sortedAlerts.length)}</span> of <span className="font-medium text-zinc-900">{sortedAlerts.length}</span> alerts
+            </div>
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="h-8 px-2"
+              >
+                Previous
+              </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-8 h-8 rounded-md text-xs font-medium transition-colors ${
+                    currentPage === page 
+                      ? 'bg-indigo-600 text-white' 
+                      : 'text-zinc-600 hover:bg-zinc-200'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="h-8 px-2"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
