@@ -1,8 +1,8 @@
 import { Alert, User } from '../types';
 
 export const MOCK_USERS: User[] = [
-  { id: 'S1', name: 'John Doe', role: 'student', dormInfo: 'Bldg A, 4F, 401' },
-  { id: 'S2', name: 'Jane Smith', role: 'student', dormInfo: 'Bldg B, 2F, 205' },
+  { id: 'S1', name: 'John Doe', role: 'student', dormInfo: 'F4, 4F, 401' },
+  { id: 'S2', name: 'Jane Smith', role: 'student', dormInfo: 'Sathorn 1, 2F, 205' },
   { id: 'ST1', name: 'Staff Alice', role: 'staff' },
   { id: 'ST2', name: 'Staff Bob', role: 'staff' },
 ];

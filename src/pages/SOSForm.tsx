@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, MapPin, Info } from 'lucide-react';
-import { motion } from 'motion/react';
+import { ArrowLeft, Send, MapPin, Info, AlertTriangle } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Category, User, Location, Alert, Priority } from '../types';
 import { Button } from '../components/Button';
 
@@ -28,7 +28,7 @@ const FLOORS = [
 // AI Priority Logic (Simulated)
 const getAIPriority = (category: Category, note: string = ''): { priority: Priority; reason: string } => {
   const lowerNote = note.toLowerCase();
-  
+
   // Rule 1: Fire is always High
   if (category === 'Fire') {
     return { priority: 'High', reason: 'Critical category: Fire detected.' };
@@ -64,18 +64,64 @@ const getAIPriority = (category: Category, note: string = ''): { priority: Prior
 export function SOSForm({ user, onAddAlert }: SOSFormProps) {
   const navigate = useNavigate();
   const [category, setCategory] = useState<Category>('Medical');
-  
+  const [showEmergencyHint, setShowEmergencyHint] = useState(false);
+
   const parsedBuilding = user.dormInfo?.split(',')[0].replace('Bldg ', '').trim() || '';
   const initialBuilding = BUILDINGS.includes(parsedBuilding) ? parsedBuilding : '';
-  
+
   const parsedFloor = user.dormInfo?.split(',')[1].trim().replace('F', '') || '';
   const initialFloor = FLOORS.some(f => f.value === parsedFloor) ? parsedFloor : '';
+  const initialRoom = user.dormInfo?.split(',')[2].trim() || '';
 
   const [location, setLocation] = useState<Location>({
-    building: initialBuilding,
-    floor: initialFloor,
-    room: user.dormInfo?.split(',')[2].trim() || '',
+    building: '',
+    floor: '',
+    room: '',
   });
+
+  // Handle category change with conditional auto-fill
+  const handleCategoryChange = (newCategory: Category) => {
+    setCategory(newCategory);
+
+    if (newCategory === 'Fire' || newCategory === 'Medical') {
+      // Auto-fill for high-priority emergencies
+      setLocation({
+        building: initialBuilding,
+        floor: initialFloor,
+        room: initialRoom,
+      });
+      setShowEmergencyHint(true);
+    } else {
+      // Clear for manual entry in other categories
+      setLocation({
+        building: '',
+        floor: '',
+        room: '',
+      });
+      setShowEmergencyHint(false);
+    }
+  };
+
+  // Initial auto-fill if default category is emergency
+  useEffect(() => {
+    if (category === 'Fire' || category === 'Medical') {
+      setLocation({
+        building: initialBuilding,
+        floor: initialFloor,
+        room: initialRoom,
+      });
+      setShowEmergencyHint(true);
+    }
+  }, []); // Only on mount
+
+  // Auto-hide hint timer
+  useEffect(() => {
+    if (showEmergencyHint) {
+      const timer = setTimeout(() => setShowEmergencyHint(false), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [showEmergencyHint]);
+
   const [note, setNote] = useState('');
   const [otherReason, setOtherReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,7 +133,7 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     let hasError = false;
 
     if (!location.building) {
@@ -120,7 +166,7 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
     }
 
     if (hasError) return;
-    
+
     setShowConfirmDialog(true);
   };
 
@@ -172,17 +218,40 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
               <button
                 key={cat}
                 type="button"
-                onClick={() => setCategory(cat)}
-                className={`p-4 rounded-xl border-2 text-left transition-all ${
-                  category === cat 
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm' 
+                onClick={() => handleCategoryChange(cat)}
+                className={`p-4 rounded-xl border-2 text-left transition-all ${category === cat
+                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm'
                     : 'border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300'
-                }`}
+                  }`}
               >
                 <span className="font-semibold block">{cat}</span>
               </button>
             ))}
           </div>
+
+          <AnimatePresence>
+            {showEmergencyHint && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                  <div className="bg-amber-100 p-1.5 rounded-lg">
+                    <AlertTriangle className="w-4 h-4 text-amber-700" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-amber-900">Emergency Detected</p>
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      Location auto-filled using your profile data for a faster response.
+                      <span className="block mt-1 font-medium opacity-80 italic">You can still edit these fields if you are elsewhere.</span>
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {category === 'Other' && (
             <div className="mt-4 space-y-2">
               <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Please specify the issue</label>
@@ -209,12 +278,12 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-zinc-400">Building</label>
-              <select 
+              <select
                 required
                 className={`w-full bg-white border ${buildingError ? 'border-red-500 focus:ring-red-500' : 'border-zinc-200 focus:ring-indigo-500'} rounded-lg px-3 py-2 text-sm focus:ring-2 outline-none`}
                 value={location.building}
                 onChange={e => {
-                  setLocation({...location, building: e.target.value});
+                  setLocation({ ...location, building: e.target.value });
                   if (buildingError) setBuildingError('');
                 }}
               >
@@ -225,12 +294,12 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-zinc-400">Floor</label>
-              <select 
+              <select
                 required
                 className={`w-full bg-white border ${floorError ? 'border-red-500 focus:ring-red-500' : 'border-zinc-200 focus:ring-indigo-500'} rounded-lg px-3 py-2 text-sm focus:ring-2 outline-none`}
                 value={location.floor}
                 onChange={e => {
-                  setLocation({...location, floor: e.target.value});
+                  setLocation({ ...location, floor: e.target.value });
                   if (floorError) setFloorError('');
                 }}
               >
@@ -241,12 +310,12 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-zinc-400">Room</label>
-              <input 
+              <input
                 required
                 className={`w-full bg-white border ${roomError ? 'border-red-500 focus:ring-red-500' : 'border-zinc-200 focus:ring-indigo-500'} rounded-lg px-3 py-2 text-sm focus:ring-2 outline-none`}
                 value={location.room}
                 onChange={e => {
-                  setLocation({...location, room: e.target.value});
+                  setLocation({ ...location, room: e.target.value });
                   if (roomError) setRoomError('');
                 }}
               />
@@ -257,7 +326,7 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
 
         <section className="space-y-4">
           <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider">Additional Note (Optional)</h2>
-          <textarea 
+          <textarea
             rows={3}
             placeholder="Describe your situation briefly..."
             className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
@@ -266,9 +335,9 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
           />
         </section>
 
-        <Button 
-          type="submit" 
-          className="w-full h-14 text-lg gap-2" 
+        <Button
+          type="submit"
+          className="w-full h-14 text-lg gap-2"
           disabled={isSubmitting}
         >
           {isSubmitting ? (
@@ -283,12 +352,12 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
       </form>
 
       {showConfirmDialog && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
         >
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl"
@@ -298,18 +367,18 @@ export function SOSForm({ user, onAddAlert }: SOSFormProps) {
               Are you sure you want to send this <span className="font-semibold">{category}{category === 'Other' ? ` (${otherReason})` : ''}</span> SOS request for Building {location.building}, Floor {location.floor}, Room {location.room}?
             </p>
             <div className="flex gap-3">
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex-1" 
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
                 onClick={() => setShowConfirmDialog(false)}
               >
                 Cancel
               </Button>
-              <Button 
-                type="button" 
-                variant="danger" 
-                className="flex-1" 
+              <Button
+                type="button"
+                variant="danger"
+                className="flex-1"
                 onClick={confirmSubmit}
               >
                 Confirm
