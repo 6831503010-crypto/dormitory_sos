@@ -3,8 +3,8 @@ import { Alert, User } from '../types';
 export const MOCK_USERS: User[] = [
   { id: 'S1', name: 'John Doe', role: 'student', dormInfo: 'F4, 4F, 401' },
   { id: 'S2', name: 'Jane Smith', role: 'student', dormInfo: 'Sathorn 1, 2F, 205' },
-  { id: 'ST1', name: 'Staff Alice', role: 'staff' },
-  { id: 'ST2', name: 'Staff Bob', role: 'staff' },
+  { id: 'ST1', name: 'Staff Alice', role: 'staff', phone: '081-111-2222' },
+  { id: 'ST2', name: 'Staff Bob', role: 'staff', phone: '081-333-4444' },
 ];
 
 export const INITIAL_ALERTS: Alert[] = [
@@ -17,6 +17,8 @@ export const INITIAL_ALERTS: Alert[] = [
     note: 'Fainted in the room.',
     status: 'Received',
     createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
+    assignedStaffName: 'Staff Alice',
+    assignedStaffPhone: '081-111-2222',
     aiPriority: 'High',
     aiReason: 'Medical category with urgent keyword "fainted" detected.'
   },

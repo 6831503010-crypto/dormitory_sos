@@ -52,7 +52,9 @@ export function AlertDetails({ user, alerts, onUpdateAlert }: AlertDetailsProps)
     onUpdateAlert(alert.id, { 
       status,
       resolutionNote: resNote,
-      assignedStaffId: user.id
+      assignedStaffId: user.id,
+      assignedStaffName: user.name,
+      assignedStaffPhone: user.phone || 'N/A'
     });
 
     // Lock the form if we just moved to a terminal state

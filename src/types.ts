@@ -24,6 +24,8 @@ export interface Alert {
   createdAt: string;
   resolutionNote?: string;
   assignedStaffId?: string;
+  assignedStaffPhone?: string;
+  assignedStaffName?: string;
   aiPriority?: Priority;
   aiReason?: string;
 }
@@ -32,5 +34,6 @@ export interface User {
   id: string;
   name: string;
   role: Role;
+  phone?: string;
   dormInfo?: string;
 }

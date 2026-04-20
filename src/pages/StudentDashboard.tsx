@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, Plus, Clock, MapPin, ChevronRight, AlertTriangle, History } from 'lucide-react';
+import { Search, Filter, Plus, Clock, MapPin, ChevronRight, AlertTriangle, History, Phone, User as UserIcon } from 'lucide-react';
 import { Alert, User, Status } from '../types';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
@@ -156,6 +156,18 @@ export function StudentDashboard({ user, alerts }: StudentDashboardProps) {
                     <span className="text-xs text-zinc-400">
                       {new Date(alert.createdAt).toLocaleDateString()} • {new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
+                    {alert.assignedStaffName && (
+                      <div className="mt-2 flex items-center gap-3 text-xs text-zinc-500 bg-zinc-50 p-2 rounded-lg border border-zinc-100">
+                        <div className="flex items-center gap-1">
+                          <UserIcon className="w-3 h-3 text-indigo-500" />
+                          <span className="font-semibold text-zinc-700">{alert.assignedStaffName}</span>
+                        </div>
+                        <div className="flex items-center gap-1 border-l border-zinc-200 pl-2">
+                          <Phone className="w-3 h-3 text-emerald-500" />
+                          <span className="text-zinc-600 font-mono">{alert.assignedStaffPhone}</span>
+                        </div>
+                      </div>
+                    )}
                     {alert.resolutionNote && (
                       <span className="text-xs text-zinc-400 mt-3">
                         <p className="font-bold uppercase tracking-wider mb-1">Staff Resolution Note</p>
@@ -208,6 +220,33 @@ export function StudentDashboard({ user, alerts }: StudentDashboardProps) {
                       "{alert.note}"
                     </p>
                   )}
+                  
+                  {alert.status !== 'Sent' && alert.assignedStaffName && (
+                    <div className="mt-4 pt-3 border-t border-zinc-100">
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Responder Contact Info</p>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600">
+                            <UserIcon className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-zinc-900 leading-tight">{alert.assignedStaffName}</p>
+                            <p className="text-[10px] text-zinc-500">Assigned Staff</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 border-l border-zinc-100 pl-4 h-8">
+                          <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600">
+                            <Phone className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-mono font-bold text-zinc-900 leading-tight">{alert.assignedStaffPhone}</p>
+                            <p className="text-[10px] text-zinc-500">Phone Number</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {alert.resolutionNote && (
                     <div className="mt-3 pt-3 border-t border-zinc-100">
                       <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Staff Resolution Note</p>
